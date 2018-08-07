@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition  xmlns="http://www.w3.org/1999/xhtml"     
+    xmlns:ui="http://java.sun.com/jsf/facelets"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:p="http://primefaces.org/ui"
+    xmlns:f="http://java.sun.com/jsf/core"
+    template="templates/template.xhtml">
+    <ui:param name="hideLogout" value="true" />
+    <ui:define name="content">
+               
+            <p:panel header="Login" style="width: 360px; position:absolute; left:50%; top:50%;
+                     margin-left:-180px; margin-top: -100px;">
+ <p:messages id="msg" showDetail="true" closable="true" autoUpdate="true" escape="false"/>
+                <h:panelGrid id="loginPanel" columns="2">
+ 
+                    <h:outputText value="Username" />
+ 
+                    <p:inputText id="username" value="#{loginBean.uname}" ></p:inputText>
+ 
+                    <p:spacer></p:spacer>
+ 
+                    <p:message for="username" ></p:message>
+ 
+                    <h:outputText value="Password" />
+ 
+                    <p:password id="password" value="#{loginBean.password}"  feedback="false"></p:password>
+ 
+                    <p:spacer></p:spacer>
+ 
+                    <p:message for="password"></p:message>
+ 
+                    <p:spacer></p:spacer>
+ 
+                    <p:commandButton action="#{loginBean.validateLogin}" value="Login" update="loginPanel" ajax="true"></p:commandButton>
+ 
+                </h:panelGrid>
+ 
+            </p:panel>
+    </ui:define>
+    
+</ui:composition>

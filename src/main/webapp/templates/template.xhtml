@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://java.sun.com/jsf/core">
+    <f:view contentType="text/html" id="fview">
+
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />        
+        <!--f:facet name="first">
+        <meta http-equiv="X-UA-Compatible" content="IE=9" /> 
+    </f:facet-->    
+        <title>OIC Reconciliation Tool</title>
+        <ui:debug />        
+        <ui:insert name="metadata" />   
+        <h:head>                                                                      
+        </h:head>
+
+        <h:body >
+            <h:form id="mainForm" style="width: 100%;height: 100%;" 
+                    enctype="multipart/form-data">
+                <h:outputStylesheet library="css" name="main.css"  />
+                <p:layout fullPage="true">
+                    <p:layoutUnit position="north" collapsible="true">
+                        <h:panelGrid columns="4" width="100%">
+                            <img src="resources/images/two-logos.png" align="left"/>
+                            <h:panelGrid style="margin-left: 100px;" columns="3">
+                            <h:outputText value="OIC" style="font-size: 50px;
+                                           color: #199057; font-weight: bold"/>
+                            <p:spacer/>
+                            <h:outputText value="Reconciliation Tool" style="font-size: 50px;
+                                          color: #654b24; font-weight: bold">                
+                            </h:outputText>
+                            </h:panelGrid>
+                            <h:commandButton action="home.xhtml" title="Home" immediate="true" 
+                                             rendered="#{not hideLogout}" image="resources/images/Home-icon.png" /> 
+                            <h:commandButton id="logoutBtn" action="#{loginBean.logout}" title="Logout" immediate="true"
+                                             rendered="#{not hideLogout}" value="Logout" image="resources/images/Logout-icon.png"/>           
+                        </h:panelGrid>
+                    </p:layoutUnit>
+                    <p:layoutUnit position="west" resizable="true" size="160" minSize="40" maxSize="300"
+                                  collapsible="true" rendered="#{not hideLogout}">
+                        <p:menu style="font-size: small;">                            
+                            <p:menuitem value="Home" outcome="/home.xhtml" immediate="true"/>
+                            <p:menuitem value="New Reconciliation" outcome="/new-recon.xhtml" immediate="true"/>
+                            <p:menuitem value="Edit Reconciliation" outcome="/update-candidates.xhtml" immediate="true"/>
+                            <p:menuitem value="Delete Reconciliation" outcome="/delete-recon.xhtml" immediate="true"/>
+                            <p:menuitem value="Validate Candidates" outcome="/validate-candidates.xhtml" immediate="true"/>
+                            <p:menuitem value="Validate Recon Data" outcome="/validate-recon-data.xhtml" immediate="true"/>                            
+                            <p:menuitem value="Review Recon Data" outcome="/review-recon.xhtml" immediate="true"/>
+                        </p:menu>
+                    </p:layoutUnit>
+
+                    <p:layoutUnit position="center">                      
+                        <ui:insert name="content" />
+                    </p:layoutUnit>
+                </p:layout>
+            </h:form>
+        </h:body>
+
+    </f:view>
+</html>
+

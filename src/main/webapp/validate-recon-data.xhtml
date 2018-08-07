@@ -1,0 +1,290 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition  xmlns="http://www.w3.org/1999/xhtml"     
+                 xmlns:ui="http://java.sun.com/jsf/facelets"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 template="templates/template.xhtml">
+
+    <ui:define name="metadata">
+        <f:metadata>
+            <f:viewParam name="reconId" value="#{validateReconDataBean.reconId}"/>
+            <f:viewAction action="#{validateReconDataBean.validateReconData}"/>
+        </f:metadata>
+    </ui:define>
+    <ui:define name="content">        
+        <p:steps activeIndex="4" styleClass="custom" readonly="false" style="font-size: small;">
+            <p:menuitem value="Upload Candidates" outcome="/new-recon.xhtml" title="Upload Candidates"/>
+            <p:menuitem value="Validate Candidates" outcome="/validate-candidates.xhtml" title="Validate Candidates"/> 
+            <p:menuitem value="Edit Recon Data" outcome="/update-candidates.xhtml" title="Edit Recon Data"/> 
+            <p:menuitem value="Validate Recon Data" outcome="/validate-recon-data.xhtml" title="Validate Recon Data"/>
+            <p:menuitem value="Review and Close" outcome="/review-recon.xhtml" title="Review and Close"/>
+        </p:steps> 
+
+        <p:panel id="validatePnl" style="font-size: small; margin-top: 80px">
+
+            <p:messages id="msg" autoUpdate="true" showDetail="true" closable="true" escape="false"/>
+            <p:growl for="errorDeletions" id="errGrowl" autoUpdate="true" showDetail="true"/>                     
+
+            <h:panelGrid columns="3" style="font-size: small">
+                <p:outputLabel value="Enter ReconId: "/>                
+                <p:inputText value="#{validateReconDataBean.reconId}" required="true"
+                             requiredMessage="Unique value is required for Recon ID.">                        
+                </p:inputText>                                  
+                <p:commandButton value="Validate Recon Data" actionListener="#{validateReconDataBean.validateReconData}"
+                                 update="validatePnl,nxtBtn" id="validateBtn"/>
+            </h:panelGrid>             
+            <p:dataTable id="summaryTbl" style="font-size: small;" 
+                         var="summary" value="#{validateReconDataBean.payload}">
+                <f:facet name="header">
+                    <h:outputText value="Summary"/>
+                </f:facet>
+                <p:column headerText="Total Count">
+                    <h:outputText value="#{validateReconDataBean.payload.totalCount}"/>
+                </p:column>
+                <p:column headerText="Total Claimed Amount">
+                    <h:outputText value="#{validateReconDataBean.payload.totalClaimedAmount}"/>
+                </p:column>
+                <p:column headerText="Total Rejected Amount">
+                    <h:outputText value="#{validateReconDataBean.payload.totalRejectedAmount}"/>
+                </p:column>
+                <p:column headerText="Eligible Rejected Amount">
+                    <h:outputText value="#{validateReconDataBean.payload.eligibleRejectedAmount}"/>
+                </p:column>
+                <p:column headerText="Total Patient Share">
+                    <h:outputText value="#{validateReconDataBean.payload.totalPatientShare}"/>
+                </p:column>
+                <p:column headerText="Paid Amount">
+                    <h:outputText value="#{validateReconDataBean.payload.paidAmount}"/>
+                </p:column>              
+            </p:dataTable>        
+            <table>
+                <tr style="vertical-align: top">
+                    <td>
+                        <p:dataTable id="zeroErrDT" var="zeroErr" value="#{validateReconDataBean.zeroErrors}"
+                                     style="font-size: small;"                            
+                                     paginator="true" rows="10" 
+                                     paginatorTemplate="{Exporters} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                     rowsPerPageTemplate="5,10,15">  
+                            <f:facet name="header">
+                                <div style="text-align: left">
+                                    <h:outputText value="Claims with NEW PAYABLE AMOUNT less than or equal to zero."/>
+                                </div>
+                            </f:facet>
+                            <f:facet name="{Exporters}">                
+                                <h:commandLink>
+                                    <p:graphicImage name="images/Excel-icon.png" width="24" style="border: none"/>
+                                    <p:dataExporter type="xlsx" target="zeroErrDT" fileName="#{validateReconDataBean.reconId}_Zero_Errors" />
+                                </h:commandLink>                
+                            </f:facet>
+                            <p:column headerText="Claim Id" style="text-align: left">
+                                <h:outputText value="#{zeroErr.reconClaimsDataPK.claimId}"/>
+                            </p:column>
+                            <p:column headerText="Claim Item" style="text-align: left">
+                                <h:outputText value="#{zeroErr.reconClaimsDataPK.cclaimItem}"/>
+                            </p:column>
+                            <p:column headerText="New Payable Amount" style="text-align: left">
+                                <h:outputText value="#{zeroErr.newPayableAmt}"/>
+                            </p:column>
+                        </p:dataTable>                        
+                        <p:commandButton value="Delete All Zero Errors" actionListener="#{validateReconDataBean.deleteErrors(validateReconDataBean.zeroErrors)}"
+                                         disabled="#{validateReconDataBean.zeroErrors==null or validateReconDataBean.zeroErrors.size()==0 or validateReconDataBean.reconType=='PN'}"
+                                         update="validatePnl,nxtBtn" style="font-size: small"/> 
+                    </td>                
+                    <td>
+                        <p:dataTable id="nullErrDT" var="nullErr" value="#{validateReconDataBean.nullErrors}"
+                                     style="font-size: small;"                             
+                                     paginator="true" rows="10" 
+                                     paginatorTemplate="{Exporters} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                     rowsPerPageTemplate="5,10,15">  
+                            <f:facet name="header">
+                                <div style="text-align: left">
+                                    <h:outputText value="Claims with unspecified NEW PAYABLE AMOUNT." />
+                                </div>
+                            </f:facet>
+                            <f:facet name="{Exporters}">                
+                                <h:commandLink>
+                                    <p:graphicImage name="images/Excel-icon.png" width="24" style="border: none"/>
+                                    <p:dataExporter type="xlsx" target="nullErrDT" fileName="#{validateReconDataBean.reconId}_Null_Errors" />
+                                </h:commandLink>                
+                            </f:facet>
+                            <p:column headerText="Claim Id" style="text-align: left">
+                                <h:outputText value="#{nullErr.reconClaimsDataPK.claimId}"/>
+                            </p:column>
+                            <p:column headerText="Claim Item" style="text-align: left">
+                                <h:outputText value="#{nullErr.reconClaimsDataPK.cclaimItem}"/>
+                            </p:column>
+                            <p:column headerText="New Payable Amount" style="text-align: left">
+                                <h:outputText value="#{nullErr.newPayableAmt}"/>
+                            </p:column>
+                        </p:dataTable>
+                        <p:commandButton value="Delete All Null Errors" actionListener="#{validateReconDataBean.deleteErrors(validateReconDataBean.nullErrors)}"
+                                         disabled="#{validateReconDataBean.nullErrors==null or validateReconDataBean.nullErrors.size()==0 or validateReconDataBean.reconType=='PN'}"
+                                         update="validatePnl,nxtBtn" style="font-size: small">
+                            <p:confirm header="Confirmation" message="Are you sure you want to delete all null errors?" icon="ui-icon-alert" />
+                        </p:commandButton>
+                    </td>                
+                </tr>
+                <br></br>
+            </table>
+            <p:dataTable id="amtErrDT" var="amtErr" value="#{validateReconDataBean.amtErrors}"
+                         style="font-size: small;" editable="true" editMode="cell"                             
+                         paginator="true" rows="2" 
+                         paginatorTemplate="{Exporters} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         rowsPerPageTemplate="2,5,10,15">  
+                <f:facet name="header">
+                    <div style="text-align: left">
+                        <h:outputText value="Claims with total paid amount greater than claimed amount."/>
+                    </div>
+                </f:facet>
+                <f:facet name="{Exporters}">                
+                    <h:commandLink>
+                        <p:graphicImage name="images/Excel-icon.png" width="24" style="border: none"/>
+                        <p:dataExporter type="xlsx" target="amtErrDT" fileName="#{validateReconDataBean.reconId}_Amount_Errors" />
+                    </h:commandLink>                
+                </f:facet>
+                <p:column headerText="Recon Id" width="100">
+                    <h:outputText value="#{amtErr.reconClaimsDataPK.reconId}" />
+                </p:column>
+                <p:column headerText="Claim Id" width="100">
+                    <h:outputText value="#{amtErr.reconClaimsDataPK.claimId}" />
+                </p:column>
+                <p:column headerText="Claim Item" width="100">
+                    <h:outputText value="#{amtErr.reconClaimsDataPK.cclaimItem}" />
+                </p:column>
+                <p:column headerText="Invoice Num" width="100">
+                    <h:outputText value="#{amtErr.invoiceNum}" />
+                </p:column>
+                <p:column headerText="Member Id" width="100">
+                    <h:outputText value="#{amtErr.memberId}" />
+                </p:column>
+                <p:column headerText="Resubmission Type" width="120">
+                    <h:outputText value="#{amtErr.resubmissiontype}" />
+                </p:column>
+                <p:column headerText="Service Date" width="200">
+                    <h:outputText value="#{amtErr.serviceDt}" />
+                </p:column>
+                <p:column headerText="Activity Id" width="100">
+                    <h:outputText value="#{amtErr.activityId}" />
+                </p:column>
+                <p:column headerText="Primary Diagnosis Desc" width="200">
+                    <h:outputText value="#{amtErr.diagDescPrimary}" />
+                </p:column>
+                <p:column headerText="Secondary Diagnosis Desc" width="200">
+                    <h:outputText value="#{amtErr.diagDescSecondary}" />
+                </p:column>
+                <p:column headerText="Benefit Type" width="100">
+                    <h:outputText value="#{amtErr.benefitType}" />
+                </p:column>
+                <p:column headerText="Benefit Code" width="120">
+                    <h:outputText value="#{amtErr.benefitCode}" />
+                </p:column>
+                <p:column headerText="Benefit Desc" width="200">
+                    <h:outputText value="#{amtErr.benefitDesc}" />
+                </p:column>
+                <p:column headerText="Quantity" width="100">
+                    <h:outputText value="#{upRecon.quantity}" />
+                </p:column>
+                <p:column headerText="Clinician Id" width="100">
+                    <h:outputText value="#{amtErr.clinicianId}" />
+                </p:column>
+                <p:column headerText="Clinician Spec" width="100">
+                    <h:outputText value="#{amtErr.clinicianSpec}" />
+                </p:column>
+                <p:column headerText="Claimed Net" width="100">
+                    <h:outputText value="#{amtErr.claimedNet}" />
+                </p:column>
+                <p:column headerText="Deductible" width="100">
+                    <h:outputText value="#{amtErr.deductible}" />
+                </p:column>
+                <p:column headerText="Paid Amount" width="100">
+                    <h:outputText value="#{amtErr.paidAmt}" />
+                </p:column>
+                <p:column headerText="Eligible Rejected Amount" width="100">
+                    <h:outputText value="#{amtErr.rejEligibleAmt}" />
+                </p:column>
+                <p:column headerText="Total Rejected Amount" width="100">
+                    <h:outputText value="#{amtErr.totalRejAmt}" />
+                </p:column>                
+                <p:column headerText="New Payable Amount" width="120">
+                    <p:cellEditor>
+                        <f:facet name="output"><h:outputText value="#{amtErr.newPayableAmt}" /></f:facet>
+                        <f:facet name="input">
+                            <p:inputText id="newAmtTxt" value="#{amtErr.newPayableAmt}" disabled="#{amtErr.frozen==1}" 
+                                         validatorMessage="Value should be greater than or equal to 0."
+                                         converterMessage="Only numeric values greater than or equal to 0 are allowed.">
+                                <f:validateDoubleRange minimum="0.0"/>
+                                <p:ajax update="mainForm:validatePnl"
+                                        listener="#{validateReconDataBean.updateReconClaimsData(amtErr.reconClaimsDataPK,amtErr.newPayableAmt,amtErr.notes)}"/>
+                            </p:inputText>                        
+                            <p:message for="newAmtTxt" display="tooltip" id="ttmsg"/>
+                        </f:facet>
+                    </p:cellEditor>
+                </p:column>
+                <p:column headerText="Denial Code" width="100">
+                    <h:outputText value="#{amtErr.denialCd}" />
+                </p:column>
+                <p:column headerText="notes" width="200">
+                    <h:outputText value="#{amtErr.notes}" />
+                </p:column>
+                <p:column headerText="Preauth ID" width="100">
+                    <h:outputText value="#{amtErr.preauthId}" />
+                </p:column>
+                <p:column headerText="Username" width="100">
+                    <h:outputText value="#{amtErr.username}" />
+                </p:column>                
+                <p:column headerText="Created By" width="100">
+                    <h:outputText value="#{amtErr.createdBy}" />
+                </p:column>
+                <p:column headerText="Created On" width="200">
+                    <h:outputText value="#{amtErr.createdOn}" />
+                </p:column>
+                <p:column headerText="Last Update By" width="100">
+                    <h:outputText value="#{amtErr.lastUpdatedBy}" />
+                </p:column>
+                <p:column headerText="Last Update On" width="200">
+                    <h:outputText value="#{amtErr.lastUpdatedOn}" />
+                </p:column>
+                <p:column headerText="Recon Type" width="200">
+                    <h:outputText value="#{amtErr.reconType eq 'AS'?'Accepted Claims - Already paid manually':
+                                           (amtErr.reconType eq 'AN'?'Accepted Claims - To be transferred for Payment':
+                                           'Pending Claims.')}"  />
+                </p:column>
+            </p:dataTable>                        
+            <p:commandButton value="Delete All Amount Errors" actionListener="#{validateReconDataBean.deleteErrors(validateReconDataBean.amtErrors)}"                                 
+                             update="validatePnl,nxtBtn" style="font-size: small"
+                             disabled="#{validateReconDataBean.amtErrors==null or validateReconDataBean.amtErrors.size()==0 or validateReconDataBean.reconType=='PN'}">
+                <p:confirm header="Confirmation" message="Are you sure you want to delete all excess amount errors?" icon="ui-icon-alert" />
+            </p:commandButton>
+            <br/>
+            <br/>
+            <p:commandButton value="Generate New Claim Ids" actionListener="#{validateReconDataBean.generateNewReconClaims}"
+                             update="validatePnl,nxtBtn"
+                             id="generateBtn" rendered="#{validateReconDataBean.reconType!=null and !validateReconDataBean.reconType.equalsIgnoreCase('PN')}"
+                             disabled="#{(validateReconDataBean.zeroErrors!=null and validateReconDataBean.zeroErrors.size()!=0)
+                                         or (validateReconDataBean.nullErrors!=null and validateReconDataBean.nullErrors.size()!=0)
+                                         or (validateReconDataBean.amtErrors!=null and validateReconDataBean.amtErrors.size()!=0)}"/>  
+            <p:commandButton value="Update pending claims in production" actionListener="#{validateReconDataBean.updatePendingProductionClaims}"
+                             update="validatePnl,nxtBtn"
+                             id="updateBtn" rendered="#{validateReconDataBean.reconType!=null and validateReconDataBean.reconType.equalsIgnoreCase('PN')}"
+                             disabled="#{(validateReconDataBean.nullErrors!=null and validateReconDataBean.nullErrors.size()!=0)
+                                         or (validateReconDataBean.amtErrors!=null and validateReconDataBean.amtErrors.size()!=0)}"/>  
+            <p:ajaxStatus onstart="PF('statusDialog').show()" onsuccess="PF('statusDialog').hide()"/>
+            <p:dialog widgetVar="statusDialog" modal="true" draggable="false" closable="false" resizable="false">
+                <p:graphicImage name="images/ajax-loader.gif" />
+            </p:dialog>
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+            </p:confirmDialog>
+
+        </p:panel>
+        <div align="right" style="margin-right: 20px; margin-top: 10px">
+            <p:commandButton value="Next" action="review-recon" id="nxtBtn"
+                             global="false" disabled="#{!validateReconDataBean.nextFlag}" >                
+            </p:commandButton>
+        </div>
+        <p:defaultCommand target="validateBtn" />   
+    </ui:define>
+</ui:composition>

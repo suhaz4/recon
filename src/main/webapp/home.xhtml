@@ -1,0 +1,254 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition  xmlns="http://www.w3.org/1999/xhtml"     
+                 xmlns:ui="http://java.sun.com/jsf/facelets"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 template="templates/template.xhtml"
+                 xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+
+    <ui:define name="content">
+        <p:panel id="searchPanel" header="Search Reconciliation" style="margin-bottom:10px; font-size: small;">
+            <h:panelGrid columns="2">
+                <p:outputLabel value="Search For: "/>
+                <p:selectOneMenu id="reconType" value="#{ReconBean.searchForReconType}" style="font-size: small;" >
+                    <p:ajax event="change" update="summaryPanel, detailsPanel"
+                            listener="#{ReconBean.updatePayload}"/>
+                    <f:selectItem itemLabel="Recon Production Data" itemValue="completed"/>
+                    <f:selectItem itemLabel="Recon Staging Data" itemValue="underProcess" />
+                    <f:selectItem itemLabel="Recon Candidates" itemValue="candidates" />
+                    <f:selectItem itemLabel="Overall Summary" itemValue="overall" />
+                </p:selectOneMenu> 
+                <p:outputLabel value="*Recon Id: "/>
+                <p:inputText id="reconIdTxt" value="#{ReconBean.reconId}" required="true" label="Recon Id"/>
+                <p:spacer/>
+                <p:commandButton value="Search" actionListener="#{ReconBean.searchRecon}" id="searchBtn" 
+                                 update="summaryPanel, detailsPanel, reconIdTxt" style="font-size: small;" />
+            </h:panelGrid>
+            <p:spacer height="10"/>                  
+        </p:panel>
+        <p:panel id="summaryPanel" header="Summary" style="margin-bottom:10px; font-size: small;">
+            <p:dataTable id="summaryTbl" style="font-size: small;" 
+                         var="summary" value="#{ReconBean.payload}">
+               <p:column headerText="Total Count">
+                   <h:outputText value="#{ReconBean.payload.totalCount}"/>
+                </p:column>
+                <p:column headerText="Total Claimed Amount">
+                    <h:outputText value="#{ReconBean.payload.totalClaimedAmount}"/>
+                </p:column>
+                <p:column headerText="Total Rejected Amount">
+                    <h:outputText value="#{ReconBean.payload.totalRejectedAmount}"/>
+                </p:column>
+                <p:column headerText="Eligible Rejected Amount">
+                    <h:outputText value="#{ReconBean.payload.eligibleRejectedAmount}"/>
+                </p:column>
+                <p:column headerText="Total Patient Share">
+                    <h:outputText value="#{ReconBean.payload.totalPatientShare}"/>
+                </p:column>
+                <p:column headerText="Paid Amount">
+                    <h:outputText value="#{ReconBean.payload.paidAmount}"/>
+                </p:column>              
+            </p:dataTable>
+        </p:panel>
+
+        <p:panel id="detailsPanel" header="Details" style="margin-bottom:10px; font-size: small;">               
+            <p:dataTable id="completedReconDT" var="completedRecon" value="#{ReconBean.payload.dataList}"
+                         style="font-size: small;"                             
+                         paginator="true" rows="10" 
+                         paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         rowsPerPageTemplate="5,10,15"
+                         rendered="#{ReconBean.searchForReconType=='completed'}">  
+                <f:facet name="header">
+                    <h:outputText value="Recon Production Data"/>
+                </f:facet>
+                <p:column headerText="Recon Id" width="100">
+                    <h:outputText value="#{completedRecon.reconId}" />
+                </p:column>
+                <p:column headerText="New Claim Id" width="100">
+                    <h:outputText value="#{completedRecon.newClaimId}" />
+                </p:column>
+                <p:column headerText="Old Claim Id" width="100">
+                    <h:outputText value="#{completedRecon.oldClaimId}" />
+                </p:column>
+                <p:column headerText="Paid Amount" width="100">
+                    <h:outputText value="#{completedRecon.paidAmt}" />
+                </p:column>                
+                <p:column headerText="Transfer Date" width="200">
+                    <h:outputText value="#{completedRecon.transferDt}" />
+                </p:column>
+                <p:column headerText="Credit Note No." width="100">
+                    <h:outputText value="#{completedRecon.chqEftNum}" />
+                </p:column>
+                <p:column headerText="Provider Location Code" width="100">
+                    <h:outputText value="#{completedRecon.prvdLocationCode}" />
+                </p:column>
+                <p:column headerText="Created By" width="100">
+                    <h:outputText value="#{completedRecon.createId}" />
+                </p:column>
+                <p:column headerText="Created On" width="200">
+                    <h:outputText value="#{completedRecon.createDtime}" />
+                </p:column>
+                <p:column headerText="Recon Type" width="200">
+                    <h:outputText 
+                        value="#{completedRecon.reconType eq 'AS'?'Accepted Claims - Already paid manually':
+                                 (completedRecon.reconType eq 'AN'?'Accepted Claims - To be transferred for Payment':
+                                 'Pending Claims.')}" />
+                </p:column>     
+            </p:dataTable>
+            <p:commandButton id="editReconBtn" rendered="#{ReconBean.searchForReconType=='underProcess'}"
+                             action="update-candidates" immediate="true" value="Edit Recon"
+                             style="font-size: small">
+                 <f:param name="reconId" value="#{ReconBean.reconId}"/>
+            </p:commandButton>
+            <p:dataTable id="underProcessReconDT" var="upRecon" value="#{ReconBean.payload.dataList}"
+                         style="font-size: small;"                             
+                         paginator="true" rows="10" 
+                         paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         rowsPerPageTemplate="5,10,15"
+                         rendered="#{ReconBean.searchForReconType=='underProcess'}">  
+                <f:facet name="header">
+                    <h:outputText value="Recon Staging Data"/>
+                </f:facet>
+                <p:column headerText="Recon Id" width="100">
+                    <h:outputText value="#{upRecon.reconClaimsDataPK.reconId}" />
+                </p:column>
+                <p:column headerText="Claim Id" width="100">
+                    <h:outputText value="#{upRecon.reconClaimsDataPK.claimId}" />
+                </p:column>
+                <p:column headerText="Claim Item" width="100">
+                    <h:outputText value="#{upRecon.reconClaimsDataPK.cclaimItem}" />
+                </p:column>
+                <p:column headerText="Invoice Num" width="100">
+                    <h:outputText value="#{upRecon.invoiceNum}" />
+                </p:column>
+                <p:column headerText="Member Id" width="100">
+                    <h:outputText value="#{upRecon.memberId}" />
+                </p:column>
+                <p:column headerText="Resubmission Type" width="120">
+                    <h:outputText value="#{upRecon.resubmissiontype}" />
+                </p:column>
+                <p:column headerText="Service Date" width="200">
+                    <h:outputText value="#{upRecon.serviceDt}" />
+                </p:column>
+                <p:column headerText="Activity Id" width="100">
+                    <h:outputText value="#{upRecon.activityId}" />
+                </p:column>
+                <p:column headerText="Primary Diagnosis Desc" width="200">
+                    <h:outputText value="#{upRecon.diagDescPrimary}" />
+                </p:column>
+                <p:column headerText="Secondary Diagnosis Desc" width="200">
+                    <h:outputText value="#{upRecon.diagDescSecondary}" />
+                </p:column>
+                <p:column headerText="Benefit Type" width="100">
+                    <h:outputText value="#{upRecon.benefitType}" />
+                </p:column>
+                <p:column headerText="Benefit Code" width="120">
+                    <h:outputText value="#{upRecon.benefitCode}" />
+                </p:column>
+                <p:column headerText="Benefit Desc" width="200">
+                    <h:outputText value="#{upRecon.benefitDesc}" />
+                </p:column>
+                <p:column headerText="Quantity" width="100">
+                    <h:outputText value="#{upRecon.quantity}" />
+                </p:column>
+                <p:column headerText="Clinician Id" width="100">
+                    <h:outputText value="#{upRecon.clinicianId}" />
+                </p:column>
+                <p:column headerText="Clinician Spec" width="100">
+                    <h:outputText value="#{upRecon.clinicianSpec}" />
+                </p:column>
+                <p:column headerText="Claimed Net" width="100">
+                    <h:outputText value="#{upRecon.claimedNet}" />
+                </p:column>
+                <p:column headerText="Deductible" width="100">
+                    <h:outputText value="#{upRecon.deductible}" />
+                </p:column>
+                <p:column headerText="Paid Amount" width="100">
+                    <h:outputText value="#{upRecon.paidAmt}" />
+                </p:column>
+                <p:column headerText="Eligible Rejected Amount" width="100">
+                    <h:outputText value="#{upRecon.rejEligibleAmt}" />
+                </p:column>
+                <p:column headerText="Total Rejected Amount" width="100">
+                    <h:outputText value="#{upRecon.totalRejAmt}" />
+                </p:column>
+                <p:column headerText="New Payable Amount" width="100">
+                    <h:outputText value="#{upRecon.newPayableAmt}" />
+                </p:column>
+                <p:column headerText="Denial Code" width="100">
+                    <h:outputText value="#{upRecon.denialCd}" />
+                </p:column>
+                <p:column headerText="notes" width="200">
+                    <h:outputText value="#{upRecon.notes}" />
+                </p:column>
+                <p:column headerText="Preauth ID" width="100">
+                    <h:outputText value="#{upRecon.preauthId}" />
+                </p:column>
+                <p:column headerText="Username" width="100">
+                    <h:outputText value="#{upRecon.username}" />
+                </p:column>                
+                <p:column headerText="Created By" width="100">
+                    <h:outputText value="#{upRecon.createdBy}" />
+                </p:column>
+                <p:column headerText="Created On" width="200">
+                    <h:outputText value="#{upRecon.createdOn}" />
+                </p:column>
+                <p:column headerText="Last Update By" width="100">
+                    <h:outputText value="#{upRecon.lastUpdatedBy}" />
+                </p:column>
+                <p:column headerText="Last Update On" width="200">
+                    <h:outputText value="#{upRecon.lastUpdatedOn}" />
+                </p:column>
+                <p:column headerText="Recon Type" width="200">
+                    <h:outputText value="#{upRecon.reconType eq 'AS'?'Accepted Claims - Already paid manually':
+                                 (upRecon.reconType eq 'AN'?'Accepted Claims - To be transferred for Payment':
+                                 'Pending Claims.')}"  />
+                </p:column>    
+            </p:dataTable>
+
+            <p:dataTable id="candidatesReconDT" var="candidatesRecon" value="#{ReconBean.payload.dataList}"
+                         style="font-size: small;"                             
+                         paginator="true" rows="10" 
+                         paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         rowsPerPageTemplate="5,10,15"
+                         rendered="#{ReconBean.searchForReconType=='candidates'}"> 
+                <f:facet name="header">
+                    <h:outputText value="Recon Candidate Claims"/>
+                </f:facet>
+                <p:column headerText="Recon Id" width="100">
+                    <h:outputText value="#{candidatesRecon.reconCandidateClaimsPK.reconId}" />
+                </p:column>
+                <p:column headerText="Claim Id" width="100">
+                    <h:outputText value="#{candidatesRecon.reconCandidateClaimsPK.claimId}" />
+                </p:column>
+                <p:column headerText="Provider Location Code" width="100">
+                    <h:outputText value="#{candidatesRecon.reconCandidateClaimsPK.locationCd}" />
+                </p:column>                
+                <p:column headerText="Created By" width="100">
+                    <h:outputText value="#{candidatesRecon.createdBy}" />
+                </p:column>
+                <p:column headerText="Create On" width="200">
+                    <h:outputText value="#{candidatesRecon.createdOn}" />
+                </p:column>
+                <p:column headerText="last Updated By" width="100">
+                    <h:outputText value="#{candidatesRecon.lastUpdatedBy}" />
+                </p:column>
+                <p:column headerText="Last updated On" width="200">
+                    <h:outputText value="#{candidatesRecon.lastUpdatedOn}" />
+                </p:column>
+                <p:column headerText="Recon Type" width="200">
+                    <h:outputText value="#{candidatesRecon.reconType eq 'AS'?'Accepted Claims - Already paid manually':
+                                 (candidatesRecon.reconType eq 'AN'?'Accepted Claims - To be transferred for Payment':
+                                 'Pending Claims.')}"  />
+                </p:column>    
+            </p:dataTable>                
+        </p:panel>     
+        <p:ajaxStatus onstart="PF('statusDialog').show()" onsuccess="PF('statusDialog').hide()"/>
+        <p:dialog widgetVar="statusDialog" modal="true" draggable="false" closable="false" resizable="false">
+                <p:graphicImage name="images/ajax-loader.gif" />
+            </p:dialog>
+       <p:defaultCommand target="searchBtn" /> 
+    </ui:define> 
+
+</ui:composition>

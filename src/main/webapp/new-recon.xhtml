@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition  xmlns="http://www.w3.org/1999/xhtml"     
+                 xmlns:ui="http://java.sun.com/jsf/facelets"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 template="templates/template.xhtml"
+                 xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+
+    <ui:define name="content">
+
+        <p:steps activeIndex="1" styleClass="custom" readonly="false" style="font-size: small;">
+            <p:menuitem value="Upload Candidates" outcome="/new-recon.xhtml" title="Upload Candidates"/>
+            <p:menuitem value="Validate Candidates" outcome="/validate-candidates.xhtml" title="Validate Candidates"/> 
+            <p:menuitem value="Edit Recon Data" outcome="/update-candidates.xhtml" title="Edit Recon Data"/> 
+            <p:menuitem value="Validate Recon Data" outcome="#" title="Validate Recon Data"/>
+            <p:menuitem value="Review and Close" outcome="/review-recon.xhtml" title="Review and Close"/>
+        </p:steps> 
+
+        <p:panel style="font-size: small; margin-top: 80px" id="uploadPanel">           
+            <h:panelGrid columns="2" style="font-size: small">
+                <p:outputLabel value="Enter ReconId: "/>
+                <h:panelGroup>
+                    <p:inputText value="#{NewReconBean.reconId}" required="true"
+                                 disabled="#{!NewReconBean.disableFlag}" requiredMessage="Unique value is required for Recon ID.">
+                        <p:ajax update="uploadPanel"/>
+                    </p:inputText> 
+                    <p:spacer width="10"/>
+                    <p:commandButton value="Start" style="font-size: small" update="uploadPanel" id="startBtn"
+                                     rendered="#{NewReconBean.reconId==null || NewReconBean.reconId.trim()==''}"/>
+                </h:panelGroup>
+                <p:outputLabel value="Select Recon Type: " rendered="#{NewReconBean.reconId!=null and NewReconBean.reconId.trim()!=''}"/>
+                <p:selectOneMenu id="reconType" value="#{NewReconBean.reconType}" style="font-size: small;" 
+                                 disabled="#{!NewReconBean.disableFlag}"
+                                 rendered="#{NewReconBean.reconId!=null and NewReconBean.reconId.trim()!=''}" >
+                    <p:ajax event="change" update="uploadPanel"/>
+                    <f:selectItem itemLabel="Select One" itemValue="select" />
+                    <f:selectItem itemLabel="Accepted Claims - Already paid manually" itemValue="AS"/>
+                    <f:selectItem itemLabel="Accepted Claims - To be transferred for Payment" itemValue="AN" />
+                    <f:selectItem itemLabel="Pending Claims" itemValue="PN" />                    
+                </p:selectOneMenu>                 
+            </h:panelGrid>            
+            <p:spacer height="20"/>
+            <p:messages id="msg" autoUpdate="true" showDetail="true" closable="true" escape="false"/>
+            <p:growl for="errorDeletions" id="errGrowl" autoUpdate="true" showDetail="true"/>
+            <p:fileUpload mode="advanced" label="Choose Candidate Claims"
+                          rendered="#{NewReconBean.reconType!='select'}"
+                          fileUploadListener="#{NewReconBean.uploadCandidateClaims}"
+                          allowTypes="/(\.|\/)(xls|xlsx)$/"  id="uploadFile"
+                          invalidFileMessage="Only 'xls' and 'xlsx' files are allowed" 
+                          update="uploadPanel,nxtBtn" style="font-size: small"/>                                         
+        </p:panel>
+        <div align="right" style="margin-right: 20px; margin-top: 10px">
+            <p:commandButton value="Next" action="validate-candidates" id="nxtBtn"
+                             disabled="#{NewReconBean.disableFlag}" global="false">
+                <f:param name="reconId" value="#{NewReconBean.reconId}"/>
+            </p:commandButton>
+        </div> 
+       <p:defaultCommand target="startBtn" />  
+    </ui:define>
+
+</ui:composition>
+

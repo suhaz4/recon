@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition  xmlns="http://www.w3.org/1999/xhtml"     
+                 xmlns:ui="http://java.sun.com/jsf/facelets"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 template="templates/template.xhtml">
+    
+    <ui:define name="content">
+        <p:panel id="deletePnl">                                         
+
+            <h:panelGrid columns="3">
+                <p:outputLabel value="Enter ReconId: "/>                
+                <p:inputText value="#{deleteReconBean.reconId}" required="true"
+                             requiredMessage="Value is required for Recon ID.">                        
+                    </p:inputText>                                  
+                <p:commandButton value="Delete Recon" actionListener="#{deleteReconBean.deleteRecon}"
+                                 update="deletePnl" id="deleteBtn">
+                    <p:confirm header="Confirmation" message="Are you sure you want to delete entire recon data for the specified recon Id?" icon="ui-icon-alert" />
+                </p:commandButton>
+            </h:panelGrid>
+            <p:messages id="msg" autoUpdate="true" showDetail="true" closable="true" escape="false"/>            
+            <p:ajaxStatus onstart="PF('statusDialog').show()" onsuccess="PF('statusDialog').hide()"/>
+            <p:dialog widgetVar="statusDialog" modal="true" draggable="false" closable="false" resizable="false">
+                <p:graphicImage name="images/ajax-loader.gif" />
+            </p:dialog>
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+            </p:confirmDialog>
+        </p:panel>
+        <p:defaultCommand target="deleteBtn" />  
+    </ui:define>
+    
+</ui:composition>
+

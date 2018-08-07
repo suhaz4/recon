@@ -1,0 +1,50 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Dec 21, 2015, 12:33:24 PM
+    Author     : noaman000
+*/
+
+
+
+.centeredPanel{
+    width:360px;
+    height:500px;
+    position:absolute;
+    left:10%; //sets left edge at the midway point of it's container
+    top:10%; //sets top edge at the midway point of it's container
+    margin-left:-250px; //moves the div back half it's width to centre it.
+    margin-top:-250px; //moves the div up half it's height to centre it.
+}
+
+.ui-steps .ui-steps-item {
+    width: 20%;
+}
+ 
+.ui-state-highlight {
+    text-shadow: none !important;
+}
+ 
+.ui-steps.custom {
+    margin-bottom: 30px;
+    margin-top: 10px;
+}
+
+.ui-steps.custom .ui-steps-item .ui-menuitem-link {
+    height: 10px;
+    padding: 0 1em;
+}
+ 
+.ui-steps.custom .ui-steps-item .ui-steps-number {
+    background-color: #654b24;
+    color: #FFFFFF;
+    display: inline-block;
+    width: 30px;
+    border-radius: 10px;
+    margin-top: -10px;
+    margin-bottom: 10px;
+    
+}

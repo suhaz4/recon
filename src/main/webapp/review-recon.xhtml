@@ -1,0 +1,184 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition  xmlns="http://www.w3.org/1999/xhtml"     
+                 xmlns:ui="http://java.sun.com/jsf/facelets"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 template="templates/template.xhtml">
+
+    <ui:define name="metadata">
+        <f:metadata>
+            <f:viewParam name="reconId" value="#{reviewReconBean.reconId}"/>
+            <f:viewAction action="#{reviewReconBean.searchReconDataForReview}"/>
+        </f:metadata>
+    </ui:define>
+    <ui:define name="content">        
+        <p:steps activeIndex="5" styleClass="custom" readonly="false" style="font-size: small;">
+            <p:menuitem value="Upload Candidates" outcome="/new-recon.xhtml" title="Upload Candidates"/>
+            <p:menuitem value="Validate Candidates" outcome="/validate-candidates.xhtml" title="Validate Candidates"/> 
+            <p:menuitem value="Edit Recon Data" outcome="/update-candidates.xhtml" title="Edit Recon Data"/> 
+            <p:menuitem value="Validate Recon Data" outcome="/validate-recon-data.xhtml" title="Validate Recon Data"/>
+            <p:menuitem value="Review and Close" outcome="/review-recon.xhtml" title="Review and Close"/>
+        </p:steps> 
+        <p:panel id="reviewReconPnl" style="font-size: small; margin-top: 80px;" >
+            <p:messages id="msg" autoUpdate="true" showDetail="true" closable="true" escape="false"/>
+            <p:growl id="errGrowl" autoUpdate="true" showDetail="true"/>
+            <h:panelGrid columns="3">
+                <p:outputLabel value="Enter ReconId: "/>                
+                <p:inputText value="#{reviewReconBean.reconId}" required="true"
+                             disabled="#{reviewReconBean.reconId!=null and !reviewReconBean.reconId.trim().equals('')
+                                         and reviewReconBean.hdrList!=null and reviewReconBean.hdrList.size()>0}"
+                             requiredMessage="Unique value is required for Recon ID.">                        
+                </p:inputText>                                  
+                <p:commandButton value="Search Recon For Review" actionListener="#{reviewReconBean.searchReconDataForReview}"
+                                 update="reviewReconPnl,accBtn" id="searchBtn"/>                
+            </h:panelGrid>
+            <p:dataTable id="summaryTbl" style="font-size: small;" 
+                         var="summary" value="#{reviewReconBean.payload}">
+                <f:facet name="header">
+                    <h:outputText value="Summary"/>
+                </f:facet>
+                <p:column headerText="Total Count">
+                    <h:outputText value="#{reviewReconBean.payload.totalCount}"/>
+                </p:column>
+                <p:column headerText="Total Claimed Amount">
+                    <h:outputText value="#{reviewReconBean.payload.totalClaimedAmount}"/>
+                </p:column>
+                <p:column headerText="Total Rejected Amount">
+                    <h:outputText value="#{reviewReconBean.payload.totalRejectedAmount}"/>
+                </p:column>
+                <p:column headerText="Eligible Rejected Amount">
+                    <h:outputText value="#{reviewReconBean.payload.eligibleRejectedAmount}"/>
+                </p:column>
+                <p:column headerText="Total Patient Share">
+                    <h:outputText value="#{reviewReconBean.payload.totalPatientShare}"/>
+                </p:column>
+                <p:column headerText="Paid Amount">
+                    <h:outputText value="#{reviewReconBean.payload.paidAmount}"/>
+                </p:column>              
+            </p:dataTable>
+            <br/>
+            <p:dataTable id="reviewHdrDT" var="reviewHdr" value="#{reviewReconBean.hdrList}"
+                         style="font-size: small;" editable="true" editMode="cell"                     
+                         paginator="true" rows="2" rendered="#{!reviewReconBean.reconType.equalsIgnoreCase('PN')}"
+                         paginatorTemplate="{Exporters} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         rowsPerPageTemplate="2,5,10,15">  
+                <f:facet name="header">                
+                    <h:outputText value="Old and new claims mapping" />                                
+                </f:facet>
+                <f:facet name="{Exporters}">                
+                    <h:commandLink>
+                        <p:graphicImage name="images/Excel-icon.png" width="24" style="border: none"/>
+                        <p:dataExporter type="xlsx" target="reviewHdrDT" fileName="#{reviewReconBean.reconId}_Claims_Mapping" />
+                    </h:commandLink>                
+                </f:facet>
+                <p:column headerText="Old Claim Id">
+                    <h:outputText value="#{reviewHdr.prvClaimNo}" />
+                </p:column>
+                <p:column headerText="New Claim Id">
+                    <h:outputText value="#{reviewHdr.cclaimId}" />
+                </p:column>
+                <p:column headerText="Credit Note No." rendered="#{reviewReconBean.reconType.equalsIgnoreCase('AS')}">
+                    <p:cellEditor>
+                        <f:facet name="output"><h:outputText value="#{reviewHdr.chqEftNum}"/></f:facet>
+                        <f:facet name="input">
+                            <p:inputText id="cnTxt" value="#{reviewHdr.chqEftNum}" disabled="#{reviewHdr.frozen==1}">
+                                <p:ajax update="mainForm:reviewReconPnl"
+                                        listener="#{reviewReconBean.updateCreditNoteNumber(reviewHdr)}"/>
+                            </p:inputText>                         
+                        </f:facet>
+                    </p:cellEditor>  
+                </p:column>
+            </p:dataTable>
+            <h:panelGrid columns="3"
+                         rendered="#{reviewReconBean.reconType.equalsIgnoreCase('AS')}"
+                         style="font-size: small;">
+                <p:outputLabel value="Enter Credit Note No.: "  />
+                <p:inputText value="#{reviewReconBean.chqEftNum}"/>
+                <p:commandButton value="Update Credit Note for all unfrozen Claims" actionListener="#{reviewReconBean.updateAllCreditNoteNumber(reviewReconBean.reconId)}"
+                                 update="reviewReconPnl"/> 
+            </h:panelGrid>
+            <br/>
+            <p:dataTable id="reviewItemDT" var="reviewItem" value="#{reviewReconBean.itemsList}"
+                         style="font-size: small;"                              
+                         paginator="true" rows="2"
+                         paginatorTemplate="{Exporters} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         rowsPerPageTemplate="2,5,10,15"
+                         emptyMessage="No data found with given criteria" filteredValue="#{reviewReconBean.filteredReconItems}">  
+                <f:facet name="header">                 
+                    <h:outputText value="Claim Details" />                                                                     
+                </f:facet>
+                <f:facet name="{Exporters}">                
+                    <h:commandLink>
+                        <p:graphicImage name="images/Excel-icon.png" width="24" style="border: none"/>
+                        <p:dataExporter type="xlsx" target="reviewItemDT" fileName="#{reviewReconBean.reconId}_Claim_Details" />
+                    </h:commandLink>                
+                </f:facet>
+                <p:column headerText="Claim Id" width="120" filterBy="#{reviewReconBean.reconType.equalsIgnoreCase('PN')?reviewItem.cClaimItemsPK.cclaimId:reviewItem.reconClaimItemsPK.cclaimId}" filterMatchMode="contains">
+                    <h:outputText value="#{reviewItem.reconClaimItemsPK.cclaimId}" rendered="#{!reviewReconBean.reconType.equalsIgnoreCase('PN')}"/>
+                    <h:outputText value="#{reviewItem.cclaimItemPK.cclaimId}" rendered="#{reviewReconBean.reconType.equalsIgnoreCase('PN')}"/>
+                </p:column>
+                <p:column headerText="Claim Item" width="100">
+                    <h:outputText value="#{reviewItem.reconClaimItemsPK.cclaimItem}" rendered="#{!reviewReconBean.reconType.equalsIgnoreCase('PN')}"/>
+                    <h:outputText value="#{reviewItem.cclaimItemPK.cclaimItem}" rendered="#{reviewReconBean.reconType.equalsIgnoreCase('PN')}"/>
+                </p:column>
+                <p:column headerText="Benefit Type" width="100">
+                    <h:outputText value="#{reviewItem.benefitType}" />
+                </p:column>
+                <p:column headerText="Benefit" width="100">
+                    <h:outputText value="#{reviewItem.benefit}" />
+                </p:column>
+                <p:column headerText="Service Date" width="200">
+                    <h:outputText value="#{reviewItem.serviceDt}" />
+                </p:column>
+                <p:column headerText="Claimed Unit Price" width="100">
+                    <h:outputText value="#{reviewItem.claimedUnitPrice}" />
+                </p:column>
+                <p:column headerText="Quantity" width="100">
+                    <h:outputText value="#{reviewItem.quantity}" />
+                </p:column>
+                <p:column headerText="Paid Amount" width="100">
+                    <h:outputText value="#{reviewItem.creimburseAmt}" />
+                </p:column>
+                <p:column headerText="Coinsurance" width="100">
+                    <h:outputText value="#{reviewItem.claimCoinsurance}" />
+                </p:column>
+                <p:column headerText="Copay" width="100">
+                    <h:outputText value="#{reviewItem.claimCopay}" />
+                </p:column>
+                <p:column headerText="Provider Location" width="150">
+                    <h:outputText value="#{reviewItem.prvdLocCd}" />
+                </p:column>
+                <p:column headerText="Provider Person" width="150">
+                    <h:outputText value="#{reviewItem.prvdPrsnCd}" />
+                </p:column>
+                <p:column headerText="Created By" width="100">
+                    <h:outputText value="#{reviewItem.createdBy}" rendered="#{!reviewReconBean.reconType.equalsIgnoreCase('PN')}"/>
+                    <h:outputText value="#{reviewItem.createId}" rendered="#{reviewReconBean.reconType.equalsIgnoreCase('PN')}"/>
+                </p:column>
+                <p:column headerText="Created On" width="200">
+                    <h:outputText value="#{reviewItem.createdOn}" rendered="#{!reviewReconBean.reconType.equalsIgnoreCase('PN')}"/>
+                    <h:outputText value="#{reviewItem.createDtime}" rendered="#{reviewReconBean.reconType.equalsIgnoreCase('PN')}"/>
+                </p:column>
+            </p:dataTable>          
+        </p:panel>
+        <div align="right" style="margin-right: 20px; margin-top: 10px">
+            <p:commandButton value="Accept claims in production" id="accBtn" update="accBtn,reviewReconPnl"
+                             actionListener="#{reviewReconBean.acceptClaimsInProduction}"
+                             disabled="#{reviewReconBean.reconId==null or reviewReconBean.reconId.trim().equals('') or
+                                         reviewReconBean.itemsList==null or reviewReconBean.itemsList.size()==0}"> 
+                <p:confirm header="Confirmation" message="Claims for this recon will be accepted in production, continue?" icon="ui-icon-alert" /> 
+            </p:commandButton>
+        </div>
+        <p:ajaxStatus onstart="PF('statusDialog').show()" onsuccess="PF('statusDialog').hide()"/>
+        <p:dialog widgetVar="statusDialog" modal="true" draggable="false" closable="false" resizable="false">
+            <p:graphicImage name="images/ajax-loader.gif" />
+        </p:dialog>
+        <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+            <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+        </p:confirmDialog>
+        <p:defaultCommand target="searchBtn" /> 
+    </ui:define>
+</ui:composition>

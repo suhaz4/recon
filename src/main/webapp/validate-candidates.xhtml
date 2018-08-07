@@ -1,0 +1,177 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition  xmlns="http://www.w3.org/1999/xhtml"     
+                 xmlns:ui="http://java.sun.com/jsf/facelets"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 template="templates/template.xhtml">
+
+    <ui:define name="metadata">
+        <f:metadata>
+            <f:viewParam name="reconId" value="#{validateCandidatesBean.reconId}"/>
+            <f:viewAction action="#{validateCandidatesBean.validateCandidates}"/>
+        </f:metadata>
+    </ui:define>
+    <ui:define name="content">        
+        <p:steps activeIndex="2" styleClass="custom" readonly="false" style="font-size: small;">
+            <p:menuitem value="Upload Candidates" outcome="/new-recon.xhtml" title="Upload Candidates"/>
+            <p:menuitem value="Validate Candidates" outcome="/validate-candidates.xhtml" title="Validate Candidates"/> 
+            <p:menuitem value="Edit Recon Data" outcome="/update-candidates.xhtml" title="Edit Recon Data"/> 
+            <p:menuitem value="Validate Recon Data" outcome="#" title="Validate Recon Data"/>
+            <p:menuitem value="Review and Close" outcome="/review-recon.xhtml" title="Review and Close"/>
+        </p:steps> 
+
+        <p:panel id="validatePnl" style="font-size: small; margin-top: 80px">          
+
+            <p:messages id="msg" autoUpdate="true" showDetail="true" closable="true" escape="false"/>
+            <p:growl for="errorDeletions" id="errGrowl" autoUpdate="true" showDetail="true"/>                     
+
+            <h:panelGrid columns="3" style="font-size: small">
+                <p:outputLabel value="Enter ReconId: "/>                
+                <p:inputText value="#{validateCandidatesBean.reconId}" required="true"
+                             requiredMessage="Unique value is required for Recon ID.">                        
+                </p:inputText>                                  
+                <p:commandButton value="Validate Candidates" actionListener="#{validateCandidatesBean.validateCandidates}"
+                                 update="validatePnl,nxtBtn" id="validateBtn"/>
+            </h:panelGrid>
+            <table>
+                <tr style="vertical-align: top">
+                    <td>
+                        <p:dataTable id="statusDT" var="sterr" value="#{validateCandidatesBean.statusErrorsList}"
+                                     style="font-size: small;"                            
+                                     paginator="true" rows="10" 
+                                     paginatorTemplate="{Exporters} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                     rowsPerPageTemplate="5,10,15">  
+                            <f:facet name="header">
+                                <div style="text-align: left">
+                                    <h:outputText value="Claims with status errors."/>
+                                </div>
+                            </f:facet>
+                            <f:facet name="{Exporters}">                
+                                <h:commandLink>
+                                    <p:graphicImage name="images/Excel-icon.png" width="24" style="border: none"/>
+                                    <p:dataExporter type="xlsx" target="statusDT" fileName="#{validateCandidatesBean.reconId}_Status_Errors" />
+                                </h:commandLink>                
+                            </f:facet>
+                            <p:column headerText="Claim Id" style="text-align: left">
+                                <h:outputText value="#{sterr.claimId}"/>
+                            </p:column>
+                            <p:column headerText="Claim Status" style="text-align: left">
+                                <h:outputText value="#{sterr.claimStatus}"/>
+                            </p:column>
+                        </p:dataTable>                        
+                        <p:commandButton value="Delete All Status Errors" actionListener="#{validateCandidatesBean.deleteAllStatusErrors}"
+                                         disabled="#{validateCandidatesBean.statusErrorsList==null or validateCandidatesBean.statusErrorsList.size()==0}"
+                                         update="validatePnl,nxtBtn" style="font-size: small"/> 
+                    </td>                
+                    <td>
+                        <p:dataTable id="memberDT" var="grperr" value="#{validateCandidatesBean.groupErrorsList}"
+                                     style="font-size: small;"                             
+                                     paginator="true" rows="10" 
+                                     paginatorTemplate="{Exporters} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                     rowsPerPageTemplate="5,10,15">  
+                            <f:facet name="header">
+                                <div style="text-align: left">
+                                    <h:outputText value="Claims with group/member error." />
+                                </div>
+                            </f:facet>
+                            <f:facet name="{Exporters}">                
+                                <h:commandLink>
+                                    <p:graphicImage name="images/Excel-icon.png" width="24" style="border: none"/>
+                                    <p:dataExporter type="xlsx" target="memberDT" fileName="#{validateCandidatesBean.reconId}_Grp_Member_Errors" />
+                                </h:commandLink>                
+                            </f:facet>
+                            <p:column headerText="Claim Id" style="text-align: left">
+                                <h:outputText value="#{grperr}"/>
+                            </p:column>
+                        </p:dataTable>
+                        <p:commandButton value="Delete All Group/Member Errors" actionListener="#{validateCandidatesBean.deleteAllGroupErrors}"
+                                         disabled="#{validateCandidatesBean.groupErrorsList==null or validateCandidatesBean.groupErrorsList.size()==0}"
+                                         update="validatePnl,nxtBtn" style="font-size: small"/>
+                    </td>                
+                </tr>
+                <br></br>
+                <tr>
+                    <td colspan="2">
+                        <p:dataTable id="locationDT" var="locerr" value="#{validateCandidatesBean.locationErrorsList}"
+                                     style="font-size: small;" editable="true" editMode="cell"                             
+                                     paginator="true" rows="10" 
+                                     paginatorTemplate="{Exporters} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                     rowsPerPageTemplate="5,10,15">  
+                            <f:facet name="header">
+                                <div style="text-align: left">
+                                    <h:outputText value="Claims with incorrect location code."/>
+                                </div>
+                            </f:facet>
+                            <f:facet name="{Exporters}">                
+                                <h:commandLink>
+                                    <p:graphicImage name="images/Excel-icon.png" width="24" style="border: none"/>
+                                    <p:dataExporter type="xlsx" target="locationDT" fileName="#{validateCandidatesBean.reconId}_Location_Errors" />
+                                </h:commandLink>                
+                            </f:facet>
+                            <p:column headerText="Claim Id" style="text-align: left">
+                                <h:outputText value="#{locerr.claimId}"/>
+                            </p:column>
+                            <p:column headerText="Location Code" style="text-align: left">
+                                <p:cellEditor>
+                                    <f:facet name="output"><h:outputText value="#{locerr.locationCode}"/></f:facet>
+                                    <f:facet name="input">
+                                        <p:inputText id="modelInput" value="#{locerr.locationCode}" style="width:96%">
+                                            <p:ajax update="mainForm:validatePnl,mainForm:nxtBtn"
+                                                    listener="#{validateCandidatesBean.updateLocationError(locerr.locationCode, locerr.claimId)}"/>
+                                        </p:inputText>
+                                    </f:facet>
+                                </p:cellEditor>
+
+                            </p:column>
+                        </p:dataTable>
+                        <table style=" width: 100%; margin-right: 10px">
+                            <td style="font-size: small; text-align: left">
+                                <h:panelGrid columns="3"
+                                             rendered="#{validateCandidatesBean.locationErrorsList!=null and validateCandidatesBean.locationErrorsList.size()>0}"
+                                             style="font-size: small;">
+                                    <p:outputLabel value="Enter new location code: "  />
+                                    <p:inputText value="#{validateCandidatesBean.newLocationCd}"/>
+                                    <p:commandButton value="Update All Location Errors" actionListener="#{validateCandidatesBean.updateAllLocationErrors}"
+                                                     update="validatePnl,nxtBtn"/> 
+                                </h:panelGrid>
+                            </td>
+                            <td style="text-align: right;">
+                                <p:commandButton value="Delete All Location Errors" actionListener="#{validateCandidatesBean.deleteAllLocationErrors}"                                 
+                                                 update="validatePnl,nxtBtn" style="font-size: small"
+                                                 rendered="#{validateCandidatesBean.locationErrorsList!=null and validateCandidatesBean.locationErrorsList.size()>0}">
+                                    <p:confirm header="Confirmation" message="Are you sure you want to delete all location errors?" icon="ui-icon-alert" />
+                                </p:commandButton>
+                            </td>
+                        </table>  
+                    </td>
+                </tr>
+            </table>
+            <br/>
+            <br/>
+            <p:commandButton value="Generate Recon Data" actionListener="#{validateCandidatesBean.generateReconData}"
+                             update="validatePnl,nxtBtn"
+                             id="generateBtn"
+                             disabled="#{(validateCandidatesBean.statusErrorsList!=null and validateCandidatesBean.statusErrorsList.size()!=0)
+                                         or (validateCandidatesBean.groupErrorsList!=null and validateCandidatesBean.groupErrorsList.size()!=0)
+                                         or (validateCandidatesBean.locationErrorsList!=null and validateCandidatesBean.locationErrorsList.size()!=0)}"/>  
+            <p:ajaxStatus onstart="PF('statusDialog').show()" onsuccess="PF('statusDialog').hide()"/>
+            <p:dialog widgetVar="statusDialog" modal="true" draggable="false" closable="false" resizable="false">
+                <p:graphicImage name="images/ajax-loader.gif" />
+            </p:dialog>
+        </p:panel>                       
+        <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+            <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+        </p:confirmDialog>
+        <div align="right" style="margin-right: 20px; margin-top: 10px">
+            <p:commandButton value="Next" action="update-candidates" id="nxtBtn"
+                             disabled="#{!validateCandidatesBean.nextFlag}" global="false">                
+            </p:commandButton>
+        </div>
+        <p:defaultCommand target="validateBtn" />  
+    </ui:define>
+
+</ui:composition>
+

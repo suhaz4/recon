@@ -1,0 +1,225 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition  xmlns="http://www.w3.org/1999/xhtml"     
+                 xmlns:ui="http://java.sun.com/jsf/facelets"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 template="templates/template.xhtml">
+    
+    <ui:define name="metadata">
+        <f:metadata>
+            <f:viewParam name="reconId" value="#{updateCandidatesBean.reconId}"/>
+            <f:viewAction action="#{updateCandidatesBean.initialise}"/>
+        </f:metadata>
+    </ui:define>
+    
+    <ui:define name="content">       
+
+        <p:steps activeIndex="3" styleClass="custom" readonly="false" style="font-size: small;">
+            <p:menuitem value="Upload Candidates" outcome="/new-recon.xhtml" title="Upload Candidates"/>
+            <p:menuitem value="Validate Candidates" outcome="/validate-candidates.xhtml" title="Validate Candidates"/> 
+            <p:menuitem value="Edit Recon Data" outcome="/update-candidates.xhtml" title="Edit Recon Data"/> 
+            <p:menuitem value="Validate Recon Data" outcome="#" title="Validate Recon Data"/>
+            <p:menuitem value="Review and Close" outcome="/review-recon.xhtml" title="Review and Close"/>
+        </p:steps>
+        <p:panel id="editReconPnl" style="font-size: small; margin-top: 80px;" >
+        <p:messages id="msg" autoUpdate="true" showDetail="true" closable="true" escape="false"/>
+        <p:growl id="errGrowl" autoUpdate="true" showDetail="true" escape="false"/>
+        <h:panelGrid columns="3">
+                <p:outputLabel value="Enter ReconId: "/>                
+                <p:inputText value="#{updateCandidatesBean.reconId}" required="true"
+                             requiredMessage="Unique value is required for Recon ID.">                        
+                    </p:inputText>                                  
+                <p:commandButton value="Search Recon Data" actionListener="#{updateCandidatesBean.initialise}"
+                                 update="editReconPnl,nxtBtn" id="searchBtn"/>
+            </h:panelGrid>
+        <p:dataTable id="summaryTbl" style="font-size: small;" 
+                     var="summary" value="#{updateCandidatesBean.payload}">
+            <f:facet name="header">
+                <h:outputText value="Summary"/>
+            </f:facet>
+            <p:column headerText="Total Count">
+                <h:outputText value="#{updateCandidatesBean.payload.totalCount}"/>
+            </p:column>
+            <p:column headerText="Total Claimed Amount">
+                <h:outputText value="#{updateCandidatesBean.payload.totalClaimedAmount}"/>
+            </p:column>
+            <p:column headerText="Total Rejected Amount">
+                <h:outputText value="#{updateCandidatesBean.payload.totalRejectedAmount}"/>
+            </p:column>
+            <p:column headerText="Eligible Rejected Amount">
+                <h:outputText value="#{updateCandidatesBean.payload.eligibleRejectedAmount}"/>
+            </p:column>
+            <p:column headerText="Total Patient Share">
+                <h:outputText value="#{updateCandidatesBean.payload.totalPatientShare}"/>
+            </p:column>
+            <p:column headerText="Paid Amount">
+                <h:outputText value="#{updateCandidatesBean.payload.paidAmount}"/>
+            </p:column>              
+        </p:dataTable>
+        <br/>
+        <p:fileUpload mode="advanced" label="Browse"
+                          fileUploadListener="#{updateCandidatesBean.uploadReconData}"
+                          rendered="#{updateCandidatesBean.reconId!=null and !updateCandidatesBean.reconId.trim().equals('')}"
+                          allowTypes="/(\.|\/)(xls|xlsx)$/"  id="uploadFile"
+                          invalidFileMessage="Only 'xls' and 'xlsx' files are allowed" 
+                          update="editReconPnl,nxtBtn" style="font-size: small"/> 
+        <p:dataTable id="underProcessReconDT" var="upRecon" value="#{updateCandidatesBean.payload.dataList}"
+                     style="font-size: small;" editable="true" editMode="cell"                              
+                     paginator="true" rows="2"
+                     paginatorTemplate="{Exporters} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                     rowsPerPageTemplate="2,5,10,15"
+                     emptyMessage="No data found with given criteria" filteredValue="#{updateCandidatesBean.filteredReconData}"
+                     widgetVar="upTable">  
+            <f:facet name="header">
+                <div align="left">
+                    <h:outputText value="Search all fields:" />
+                <p:inputText id="globalFilter" onkeyup="PF('upTable').filter()" style="width:150px" placeholder="Enter keyword"/>
+                </div>                
+            </f:facet>
+            <f:facet name="{Exporters}">                
+                <h:commandLink>
+                <p:graphicImage name="images/Excel-icon.png" width="24" style="border: none"/>
+                <p:dataExporter type="xlsx" target="underProcessReconDT" fileName="#{updateCandidatesBean.reconId}_Recon_Data" />
+            </h:commandLink>                
+            </f:facet>
+            <p:column headerText="Recon Id" width="120" filterBy="#{upRecon.reconClaimsDataPK.reconId}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.reconClaimsDataPK.reconId}" />
+            </p:column>
+            <p:column headerText="Claim Id" width="120" filterBy="#{upRecon.reconClaimsDataPK.claimId}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.reconClaimsDataPK.claimId}" />
+            </p:column>
+            <p:column headerText="Claim Item" width="120" filterBy="#{upRecon.reconClaimsDataPK.cclaimItem}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.reconClaimsDataPK.cclaimItem}" />
+            </p:column>
+            <p:column headerText="Invoice Num" width="120" filterBy="#{upRecon.invoiceNum}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.invoiceNum}" />
+            </p:column>
+            <p:column headerText="Member Id" width="120" filterBy="#{upRecon.memberId}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.memberId}" />
+            </p:column>
+            <p:column headerText="Resubmission Type" width="150" filterBy="#{upRecon.resubmissiontype}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.resubmissiontype}"/>                                    
+            </p:column>
+            <p:column headerText="Service Date" width="150" filterBy="#{upRecon.serviceDt}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.serviceDt}">
+                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+                </h:outputText>    
+            </p:column>
+            <p:column headerText="Activity Id" width="120" filterBy="#{upRecon.activityId}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.activityId}" />
+            </p:column>
+            <p:column headerText="Primary Diagnosis Desc" width="200" filterBy="#{upRecon.diagDescPrimary}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.diagDescPrimary}" />
+            </p:column>
+            <p:column headerText="Secondary Diagnosis Desc" width="200" filterBy="#{upRecon.diagDescSecondary}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.diagDescSecondary}" />
+            </p:column>
+            <p:column headerText="Benefit Type" width="120" filterBy="#{upRecon.benefitType}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.benefitType}" />
+            </p:column>
+            <p:column headerText="Benefit Code" width="120" filterBy="#{upRecon.benefitCode}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.benefitCode}" />
+            </p:column>
+            <p:column headerText="Benefit Desc" width="200" filterBy="#{upRecon.benefitDesc}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.benefitDesc}" />
+            </p:column>
+            <p:column headerText="Quantity" width="120" filterBy="#{upRecon.quantity}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.quantity}" />
+            </p:column>
+            <p:column headerText="Clinician Id" width="120" filterBy="#{upRecon.clinicianId}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.clinicianId}" />
+            </p:column>
+            <p:column headerText="Clinician Spec" width="120" filterBy="#{upRecon.clinicianSpec}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.clinicianSpec}" />
+            </p:column>
+            <p:column headerText="Claimed Net" width="120" filterBy="#{upRecon.claimedNet}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.claimedNet}" />
+            </p:column>
+            <p:column headerText="Deductible" width="120" filterBy="#{upRecon.deductible}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.deductible}" />
+            </p:column>
+            <p:column headerText="Paid Amount" width="120" filterBy="#{upRecon.paidAmt}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.paidAmt}" />
+            </p:column>
+            <p:column headerText="Eligible Rejected Amount" width="120" filterBy="#{upRecon.rejEligibleAmt}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.rejEligibleAmt}" />
+            </p:column>
+            <p:column headerText="Total Rejected Amount" width="120" filterBy="#{upRecon.totalRejAmt}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.totalRejAmt}" />
+            </p:column>
+            <p:column headerText="New Payable Amount" width="120" filterBy="#{upRecon.newPayableAmt}" filterMatchMode="contains">
+                <p:cellEditor>
+                    <f:facet name="output"><h:outputText value="#{upRecon.newPayableAmt}" /></f:facet>
+                    <f:facet name="input">
+                        <p:inputText id="newAmtTxt" value="#{upRecon.newPayableAmt}" disabled="#{upRecon.frozen==1}" 
+                                     validatorMessage="Value should be greater than or equal to 0."
+                                     converterMessage="Only numeric values greater than or equal to 0 are allowed.">
+                          <f:validateDoubleRange minimum="0.0"/>
+                          <p:ajax update="mainForm:summaryTbl"
+                                  listener="#{updateCandidatesBean.updateReconClaimsData(upRecon.reconClaimsDataPK,upRecon.newPayableAmt,upRecon.notes)}"/>
+                      </p:inputText>                        
+                        <p:message for="newAmtTxt" display="tooltip" id="ttmsg"/>
+                  </f:facet>
+                </p:cellEditor>
+            </p:column>
+            <p:column headerText="Denial Code" width="120" filterBy="#{upRecon.denialCd}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.denialCd}" />
+            </p:column>
+            <p:column headerText="notes" width="200" filterBy="#{upRecon.notes}" filterMatchMode="contains">
+                 <p:cellEditor>
+                    <f:facet name="output"><h:outputText value="#{upRecon.notes}"/></f:facet>
+                    <f:facet name="input">
+                      <p:inputText id="notesTxt" value="#{upRecon.notes}" disabled="#{upRecon.frozen==1}">
+                          <p:ajax update="mainForm:summaryTbl"
+                                  listener="#{updateCandidatesBean.updateReconClaimsData(upRecon.reconClaimsDataPK,upRecon.newPayableAmt,upRecon.notes)}"/>
+                      </p:inputText>                         
+                  </f:facet>
+                </p:cellEditor>                
+            </p:column>
+            <p:column headerText="Preauth ID" width="120" filterBy="#{upRecon.preauthId}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.preauthId}" />
+            </p:column>
+            <p:column headerText="Username" width="120" filterBy="#{upRecon.username}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.username}" />
+            </p:column>                
+            <p:column headerText="Created By" width="120" filterBy="#{upRecon.createdBy}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.createdBy}" />
+            </p:column>
+            <p:column headerText="Created On" width="150" filterBy="#{upRecon.createdOn}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.createdOn}">
+                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+                </h:outputText>
+            </p:column>
+            <p:column headerText="Last Update By" width="120" filterBy="#{upRecon.lastUpdatedBy}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.lastUpdatedBy}" />
+            </p:column>
+            <p:column headerText="Last Update On" width="150" filterBy="#{upRecon.lastUpdatedOn}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.lastUpdatedOn}">
+                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+                </h:outputText>
+            </p:column>
+            <p:column headerText="Recon Type" width="200" filterBy="#{upRecon.reconType}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.reconType eq 'AS'?'Accepted Claims - Already paid manually':
+                                       (upRecon.reconType eq 'AN'?'Accepted Claims - To be transferred for Payment':
+                                       'Pending Claims.')}"  />
+            </p:column> 
+            <p:column headerText="Frozen for update" width="120" filterBy="#{upRecon.frozen}" filterMatchMode="contains">
+                <h:outputText value="#{upRecon.frozen}" />
+            </p:column>
+        </p:dataTable>         
+        </p:panel>
+        <div align="right" style="margin-right: 20px; margin-top: 10px">
+            <p:commandButton value="Next" action="validate-recon-data" id="nxtBtn"
+                             global="false" disabled="#{updateCandidatesBean.reconId==null or updateCandidatesBean.reconId.trim().equals('')}">                
+            </p:commandButton>
+        </div>
+         <p:ajaxStatus onstart="PF('statusDialog').show()" onsuccess="PF('statusDialog').hide()"/>
+        <p:dialog widgetVar="statusDialog" modal="true" draggable="false" closable="false" resizable="false">
+                <p:graphicImage name="images/ajax-loader.gif" />
+            </p:dialog>
+         <p:defaultCommand target="searchBtn" />         
+    </ui:define>
+
+</ui:composition>

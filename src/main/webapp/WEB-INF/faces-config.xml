@@ -1,0 +1,110 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<faces-config version="2.2"
+              xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-facesconfig_2_2.xsd">
+    <navigation-rule>
+        <from-view-id>/login.xhtml</from-view-id>
+        <navigation-case>
+            <from-outcome>home</from-outcome>
+            <to-view-id>/home.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+    </navigation-rule>
+    
+    <navigation-rule>
+        <from-view-id>*</from-view-id>
+        <navigation-case>
+            <from-outcome>login</from-outcome>
+            <to-view-id>/login.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+    </navigation-rule>           
+    
+    <navigation-rule>
+        <from-view-id>/new-recon.xhtml</from-view-id>
+        <navigation-case>
+            <from-outcome>validate-candidates</from-outcome>
+            <to-view-id>/validate-candidates.xhtml</to-view-id>
+            <redirect>
+                <view-param>
+                    <name>reconId</name>
+                    <value>#{NewReconBean.reconId}</value>
+                </view-param>
+            </redirect>
+        </navigation-case>
+    </navigation-rule>
+    
+    <navigation-rule>
+        <from-view-id>/validate-candidates.xhtml</from-view-id>
+        <navigation-case>
+            <from-outcome>update-candidates</from-outcome>
+            <to-view-id>/update-candidates.xhtml</to-view-id>
+            <redirect>
+                <view-param>
+                    <name>reconId</name>
+                    <value>#{validateCandidatesBean.reconId}</value>
+                </view-param>
+            </redirect>
+        </navigation-case>
+    </navigation-rule>
+    
+    
+    <navigation-rule>
+        <from-view-id>/home.xhtml</from-view-id>
+        <navigation-case>
+            <from-outcome>update-candidates</from-outcome>
+            <to-view-id>/update-candidates.xhtml</to-view-id>
+            <redirect>
+                <view-param>
+                    <name>reconId</name>
+                    <value>#{ReconBean.reconId}</value>
+                </view-param>
+            </redirect>
+        </navigation-case>
+    </navigation-rule>
+    
+    
+    <navigation-rule>
+        <from-view-id>/update-candidates.xhtml</from-view-id>
+        <navigation-case>
+            <from-outcome>validate-recon-data</from-outcome>
+            <to-view-id>/validate-recon-data.xhtml</to-view-id>
+            <redirect>
+                <view-param>
+                    <name>reconId</name>
+                    <value>#{updateCandidatesBean.reconId}</value>
+                </view-param>
+            </redirect>
+        </navigation-case>
+    </navigation-rule>
+    
+    <navigation-rule>
+        <from-view-id>/validate-recon-data.xhtml</from-view-id>
+        <navigation-case>
+            <from-outcome>review-recon</from-outcome>
+            <to-view-id>/review-recon.xhtml</to-view-id>
+            <redirect>
+                <view-param>
+                    <name>reconId</name>
+                    <value>#{validateReconDataBean.reconId}</value>
+                </view-param>
+            </redirect>
+        </navigation-case>
+    </navigation-rule>
+    
+    <managed-bean>
+        <display-name>ReconBean</display-name>
+        <managed-bean-name>ReconBean</managed-bean-name>
+        <managed-bean-class>managed.ReconBean</managed-bean-class>
+        <managed-bean-scope>view</managed-bean-scope>
+    </managed-bean>
+    
+    <managed-bean>
+        <display-name>NewReconBean</display-name>
+        <managed-bean-name>NewReconBean</managed-bean-name>
+        <managed-bean-class>managed.NewReconBean</managed-bean-class>
+        <managed-bean-scope>view</managed-bean-scope>
+    </managed-bean>        
+ 
+</faces-config>
